@@ -499,8 +499,11 @@ class PdfFileWriter(object):
                 assert len(key) == (len(self._encrypt_key) + 5)
                 md5_hash = md5(key).digest()
                 key = md5_hash[:min(16, len(self._encrypt_key) + 5)]
-            obj.writeToStream(stream, key)
-            stream.write(b_("\nendobj\n"))
+            try:
+                obj.writeToStream(stream, key)
+                stream.write(b_("\nendobj\n"))
+            except:
+                pass
 
         # xref table
         xref_location = stream.tell()
@@ -572,8 +575,8 @@ class PdfFileWriter(object):
                     self._sweepIndirectReferences(externMap, realdata)
                     return data
             else:
-                if data.pdf.stream.closed:
-                    raise ValueError("I/O operation on closed file: {}".format(data.pdf.stream.name))
+                # if data.pdf.stream.closed:
+                    # raise ValueError("I/O operation on closed file: {}".format(data.pdf.stream.name))
                 newobj = externMap.get(data.pdf, {}).get(data.generation, {}).get(data.idnum, None)
                 if newobj == None:
                     try:
@@ -1692,8 +1695,8 @@ class PdfFileReader(object):
         else:
             warnings.warn("Object %d %d not defined."%(indirectReference.idnum,
                         indirectReference.generation), utils.PdfReadWarning)
-            #if self.strict:
-            raise utils.PdfReadError("Could not find object.")
+            if self.strict:
+                raise utils.PdfReadError("Could not find object.")
         self.cacheIndirectObject(indirectReference.generation,
                     indirectReference.idnum, retval)
         return retval
